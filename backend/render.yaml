@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: mail-ao-backend
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: IMPROVMX_API_KEY
+        sync: false
+      - key: DOMAIN
+        value: congcumienphi.online
+      - key: MONGO_URI
+        sync: false
+      - key: NODE_ENV
+        value: production
