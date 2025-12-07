@@ -18,36 +18,14 @@ router.get("/new", async (req, res) => {
   const inbox = randomInbox();
   const email = `${inbox}@${DOMAIN}`;
 
-  try {
-    // Tạo alias trong ImprovMX
-    // Forward đến email catch-all để trigger webhook
-    const response = await axios.post(
-      `https://api.improvmx.com/v3/domains/${DOMAIN}/aliases`,
-      {
-        alias: inbox,
-        forward: "*" // Hoặc email cụ thể như: "admin@congcumienphi.online"
-      },
-      {
-        auth: {
-          username: "api",
-          password: API_KEY
-        }
-      }
-    );
-
-    res.json({
-      success: true,
-      email: email,
-      inbox: inbox,
-      data: response.data
-    });
-  } catch (err) {
-    console.error("Error creating alias:", err.response?.data || err.message);
-    res.status(500).json({
-      success: false,
-      error: err.response?.data || err.message
-    });
-  }
+  // Không cần tạo alias vì ImprovMX đã có catch-all hoặc webhook
+  // Chỉ cần return email random, webhook sẽ tự động nhận email
+  res.json({
+    success: true,
+    email: email,
+    inbox: inbox,
+    message: "Email ready. Send emails to this address."
+  });
 });
 
 // DELETE /api/alias/:inbox - Xóa alias (optional)
