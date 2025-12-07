@@ -19,12 +19,13 @@ router.get("/new", async (req, res) => {
   const email = `${inbox}@${DOMAIN}`;
 
   try {
-    // Tạo alias trong ImprovMX - không cần forward vì dùng webhook
+    // Tạo alias trong ImprovMX
+    // Forward đến email catch-all để trigger webhook
     const response = await axios.post(
       `https://api.improvmx.com/v3/domains/${DOMAIN}/aliases`,
       {
         alias: inbox,
-        forward: `${inbox}@${DOMAIN}` // Forward về chính nó để trigger webhook
+        forward: "*" // Hoặc email cụ thể như: "admin@congcumienphi.online"
       },
       {
         auth: {
