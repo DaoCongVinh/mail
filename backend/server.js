@@ -12,10 +12,12 @@ const inboxRoute = require("./routes/inbox");
 // Initialize Express app
 const app = express();
 
-// CORS configuration - allow Vercel frontend
+// CORS configuration - allow Vercel frontend and local development
 const corsOptions = {
   origin: [
     'http://localhost:3000',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
     'https://mail-ao.vercel.app',
     'https://*.vercel.app'
   ],
