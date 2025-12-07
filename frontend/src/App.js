@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./App.css";
 
-// API URL từ environment variable hoặc default localhost
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3001/api";
+// API URL - hardcode backend Render URL
+const API_URL = process.env.REACT_APP_API_URL || "https://mail-ao-backend.onrender.com/api";
 
 function App() {
   const [email, setEmail] = useState("");

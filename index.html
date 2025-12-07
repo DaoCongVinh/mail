@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temporary Email - OTP Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .email-display {
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .email-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 10px;
+            word-break: break-all;
+        }
+
+        .inbox-section {
+            margin-top: 30px;
+        }
+
+        .inbox-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .message-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .message-from {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .message-subject {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .message-body {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .message-date {
+            font-size: 0.9rem;
+            color: #999;
+            margin-top: 10px;
+        }
+
+        .no-messages {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            padding: 20px;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .auto-refresh {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .auto-refresh input {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .auto-refresh label {
+            cursor: pointer;
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📧 Temporary Email</h1>
+            <p>@congcumienphi.online</p>
+        </div>
+
+        <div class="content">
+            <div id="error-message" style="display: none;" class="error"></div>
+
+            <div id="generate-section">
+                <button class="btn btn-primary" onclick="generateEmail()">
+                    🎲 Generate Email
+                </button>
+            </div>
+
+            <div id="email-section" style="display: none;">
+                <div class="email-display">
+                    <div class="email-text" id="email-text"></div>
+                    <button class="btn btn-secondary" onclick="copyEmail()">
+                        📋 Copy Email
+                    </button>
+                </div>
+
+                <div class="auto-refresh">
+                    <input type="checkbox" id="auto-refresh" onchange="toggleAutoRefresh()">
+                    <label for="auto-refresh">Auto-refresh every 5 seconds</label>
+                </div>
+
+                <button class="btn btn-secondary" onclick="refreshInbox()">
+                    🔄 Refresh Inbox
+                </button>
+
+                <button class="btn btn-primary" onclick="generateEmail()">
+                    ✨ New Email
+                </button>
+
+                <div class="inbox-section">
+                    <h2>📬 Inbox (<span id="message-count">0</span>)</h2>
+                    <div id="inbox-content">
+                        <div class="no-messages">
+                            ⏳ Waiting for emails...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://mail-ao-backend.onrender.com/api';
+        let currentEmail = '';
+        let currentInbox = '';
+        let autoRefreshInterval = null;
+
+        async function generateEmail() {
+            try {
+                showError('');
+                document.getElementById('generate-section').innerHTML = '<div class="loading">Generating...</div>';
+
+                const response = await fetch(`${API_URL}/alias/new`);
+                const data = await response.json();
+
+                if (data.success) {
+                    currentEmail = data.email;
+                    currentInbox = data.inbox;
+
+                    document.getElementById('email-text').textContent = currentEmail;
+                    document.getElementById('generate-section').style.display = 'none';
+                    document.getElementById('email-section').style.display = 'block';
+
+                    // Auto refresh inbox
+                    setTimeout(refreshInbox, 2000);
+                } else {
+                    showError('Failed to generate email: ' + JSON.stringify(data));
+                    document.getElementById('generate-section').innerHTML = '<button class="btn btn-primary" onclick="generateEmail()">🎲 Generate Email</button>';
+                }
+            } catch (err) {
+                showError('Error: ' + err.message);
+                document.getElementById('generate-section').innerHTML = '<button class="btn btn-primary" onclick="generateEmail()">🎲 Generate Email</button>';
+            }
+        }
+
+        async function refreshInbox() {
+            if (!currentInbox) return;
+
+            try {
+                const response = await fetch(`${API_URL}/inbox/${currentInbox}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    displayMessages(data.emails);
+                    document.getElementById('message-count').textContent = data.count;
+                } else {
+                    showError('Failed to fetch inbox');
+                }
+            } catch (err) {
+                showError('Error fetching inbox: ' + err.message);
+            }
+        }
+
+        function displayMessages(messages) {
+            const inboxContent = document.getElementById('inbox-content');
+
+            if (messages.length === 0) {
+                inboxContent.innerHTML = `
+                    <div class="no-messages">
+                        ⏳ Waiting for emails...<br>
+                        <small>Send email to: <strong>${currentEmail}</strong></small>
+                    </div>
+                `;
+                return;
+            }
+
+            inboxContent.innerHTML = messages.map(msg => `
+                <div class="message-item">
+                    <div class="message-from">📨 From: ${msg.from}</div>
+                    <div class="message-subject">${msg.subject}</div>
+                    <div class="message-body">${msg.text || msg.html}</div>
+                    <div class="message-date">${new Date(msg.date).toLocaleString()}</div>
+                </div>
+            `).join('');
+        }
+
+        function copyEmail() {
+            navigator.clipboard.writeText(currentEmail);
+            alert('Email copied to clipboard!');
+        }
+
+        function toggleAutoRefresh() {
+            const checkbox = document.getElementById('auto-refresh');
+
+            if (checkbox.checked) {
+                autoRefreshInterval = setInterval(refreshInbox, 5000);
+            } else {
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval);
+                    autoRefreshInterval = null;
+                }
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            if (message) {
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+            } else {
+                errorDiv.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
